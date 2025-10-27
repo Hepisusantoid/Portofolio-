@@ -97,56 +97,20 @@
                 <div class="card-head">
                     <h2>Admin • Update Portofolio</h2>
                     <span class="mini-hint">
-                        Ubah nilai aset lalu Simpan
+                        Edit nama & nilai aset. Tambah baris baru. Simpan untuk update JSONBin.
                     </span>
                 </div>
 
-                <form id="updateForm" class="form-grid">
-                    <div class="form-row">
-                        <label for="btcInput">Bitcoin (Rp)</label>
-                        <input
-                            type="number"
-                            id="btcInput"
-                            inputmode="numeric"
-                            class="inp"
-                            required
-                        />
+                <form id="updateForm" class="admin-flexcol">
+                    <div id="assetEditorWrapper" class="editor-wrapper">
+                        <!-- baris aset dinamis dari JS -->
                     </div>
 
-                    <div class="form-row">
-                        <label for="stockInput">Saham (Rp)</label>
-                        <input
-                            type="number"
-                            id="stockInput"
-                            inputmode="numeric"
-                            class="inp"
-                            required
-                        />
-                    </div>
+                    <button type="button" id="addAssetBtn" class="btn-outline btn-add">
+                        <i class="bx bx-plus-circle"></i> Tambah Aset
+                    </button>
 
-                    <div class="form-row">
-                        <label for="idrInput">Rupiah Cash (Rp)</label>
-                        <input
-                            type="number"
-                            id="idrInput"
-                            inputmode="numeric"
-                            class="inp"
-                            required
-                        />
-                    </div>
-
-                    <div class="form-row">
-                        <label for="usdInput">Dolar Cash (Rp)</label>
-                        <input
-                            type="number"
-                            id="usdInput"
-                            inputmode="numeric"
-                            class="inp"
-                            required
-                        />
-                    </div>
-
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-primary w-full">
                         <i class="bx bx-save"></i> Simpan Perubahan
                     </button>
 
