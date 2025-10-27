@@ -3,13 +3,13 @@
 // GET  -> baca data portofolio dari JSONBin (private)
 // PUT  -> update data portofolio ke JSONBin (butuh auth token)
 //
-// ENV yang dibutuhkan:
-//   JSONBIN_BIN_ID        (contoh: "66f123abc123...")
-//   JSONBIN_SECRET_KEY    (X-Master-Key dari JSONBin)
-//   ADMIN_TOKEN           (harus sama dengan login.js)
+// ENV yang dibutuhkan di Vercel:
+//   JSONBIN_BIN_ID
+//   JSONBIN_SECRET_KEY
+//   ADMIN_TOKEN
 
 module.exports = async (req, res) => {
-    // CORS
+    // CORS basic
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
         "Access-Control-Allow-Headers",
@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
         });
     }
 
-    // ===== READ (GET) =====
+    // ====== GET: ambil data portofolio ======
     if (req.method === "GET") {
         try {
             const r = await fetch(`${BASE_URL}/latest`, {
@@ -46,12 +46,12 @@ module.exports = async (req, res) => {
             });
 
             const json = await r.json();
-            // JSONBin balikin {record:{...}, metadata:{...}}
+            // response JSONBin biasanya {record:{...}, metadata:{...}}
             const record = json.record || json;
 
             return res.status(200).json(record);
         } catch (err) {
-            console.error("GET portfolio error:", err);
+            console.error("GET /api/portfolio error:", err);
             return res.status(500).json({
                 success: false,
                 message: "Gagal mengambil data",
@@ -59,9 +59,9 @@ module.exports = async (req, res) => {
         }
     }
 
-    // ===== UPDATE (PUT) =====
+    // ====== PUT: update data portofolio ======
     if (req.method === "PUT") {
-        // cek token admin
+        // cek token admin dari header Authorization
         const authHeader = req.headers.authorization || "";
         const givenToken = authHeader.replace("Bearer ", "").trim();
 
@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
         try {
             const { assets } = req.body || {};
 
-            // normalisasi array aset dari client
+            // normalisasi data dari frontend
             const cleanAssets = Array.isArray(assets)
                 ? assets.map((a) => ({
                       label: String(a.label || "").trim(),
@@ -82,18 +82,18 @@ module.exports = async (req, res) => {
                   }))
                 : [];
 
-            // format data yang mau disimpan ke JSONBin
             const newRecord = {
                 portfolio: cleanAssets,
                 lastUpdate: new Date().toISOString(),
             };
 
+            // simpan ke JSONBin (overwrite)
             const putRes = await fetch(`${BASE_URL}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "X-Master-Key": MASTER_KEY,
-                    "X-Bin-Versioning": "false", // supaya ga numpuk versi
+                    "X-Bin-Versioning": "false"
                 },
                 body: JSON.stringify(newRecord),
             });
@@ -103,7 +103,7 @@ module.exports = async (req, res) => {
 
             return res.status(200).json(updatedRecord);
         } catch (err) {
-            console.error("PUT portfolio error:", err);
+            console.error("PUT /api/portfolio error:", err);
             return res.status(500).json({
                 success: false,
                 message: "Gagal update data",
