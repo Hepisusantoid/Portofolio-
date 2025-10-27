@@ -280,26 +280,40 @@ body {
         var(--card-bg);
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-}
-@media (min-width: 480px) {
-    .form-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-.form-row {
+/* form container admin */
+.admin-flexcol {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 16px;
 }
-.form-row label {
-    font-size: 12px;
+
+/* semua row aset */
+.editor-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* baris aset yg bisa diubah */
+.asset-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 12px;
+    background: #0a0f16;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+}
+
+.row-label-title {
+    font-size: 11px;
     color: var(--text-dim);
     font-weight: 500;
+    line-height: 1.2;
 }
+
+.inp-name,
+.inp-value,
 .inp {
     width: 100%;
     background: #0a0f16;
@@ -311,9 +325,45 @@ body {
     font-family: inherit;
     outline: none;
 }
+
+.inp-name:focus,
+.inp-value:focus,
 .inp:focus {
     border-color: var(--accent);
     box-shadow: 0 0 12px var(--accent);
+}
+
+/* tombol hapus aset */
+.remove-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--text-danger);
+    font-size: 14px;
+    padding: 8px 10px;
+    height: fit-content;
+    align-self: end;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.remove-btn i {
+    font-size: 16px;
+}
+
+/* tombol tambah aset */
+#addAssetBtn.btn-outline {
+    width: 100%;
+    justify-content: center;
+    font-weight: 500;
+    color: var(--accent);
+    border: 1px solid rgba(0, 255, 135, 0.4);
+    background: rgba(0, 255, 135, 0.07);
+    text-shadow: 0 0 8px var(--accent);
+}
+#addAssetBtn.btn-outline:active {
+    filter: brightness(1.2);
 }
 
 /* ============ STATUS MESSAGE ============ */
@@ -322,7 +372,6 @@ body {
     min-height: 16px;
     color: var(--text-main);
     text-shadow: 0 0 8px var(--accent);
-    grid-column: 1 / -1;
     word-break: break-word;
 }
 
