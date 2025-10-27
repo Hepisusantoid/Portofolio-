@@ -1,16 +1,34 @@
-// ===== UTIL =====
-const rupiah = (num) => {
-    if (typeof num !== "number") num = Number(num) || 0;
+// ===== FORMAT & UTIL =====
+
+// Format angka jadi "Rp 1.234.567"
+function rupiah(num) {
+    const n = Number(num) || 0;
     return (
         "Rp " +
-        num.toLocaleString("id-ID", {
+        n.toLocaleString("id-ID", {
             maximumFractionDigits: 0,
         })
     );
-};
+}
 
+// Format input angka menjadi "1.234.567"
+function formatWithDots(raw) {
+    if (typeof raw !== "string") raw = String(raw ?? "");
+    const digitsOnly = raw.replace(/[^\d]/g, "");
+    if (!digitsOnly) return "";
+    return digitsOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Ubah "1.234.567" -> 1234567 (number)
+function parseToNumber(raw) {
+    if (typeof raw !== "string") raw = String(raw ?? "");
+    const digitsOnly = raw.replace(/[^\d]/g, "");
+    return Number(digitsOnly || 0);
+}
+
+// ===== GLOBAL STATE =====
 let token = localStorage.getItem("token") || null;
-let portfolioData = [];
+let portfolioData = []; // [{label:"Bitcoin", value_idr:12345}, ...]
 let chartInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -95,7 +113,7 @@ function setupEventListeners() {
                     setLoginStatus("Berhasil login ✅");
                     closeLoginModal();
                     syncAuthUI();
-                    prefillAdminForm();
+                    renderEditorRows(); // tampilkan editor aset
                 } else {
                     setLoginStatus("Gagal login ❌");
                 }
@@ -105,19 +123,33 @@ function setupEventListeners() {
             }
         });
 
-    // submit update portofolio
+    // submit update portofolio (simpan perubahan)
     document
         .getElementById("updateForm")
         .addEventListener("submit", async (e) => {
             e.preventDefault();
             setSaveStatus("Menyimpan...");
 
-            const bodyPayload = {
-                bitcoin: Number(document.getElementById("btcInput").value),
-                saham: Number(document.getElementById("stockInput").value),
-                rupiah: Number(document.getElementById("idrInput").value),
-                dolar: Number(document.getElementById("usdInput").value),
-            };
+            // ambil semua baris aset dari editor
+            const rows = document.querySelectorAll(
+                "#assetEditorWrapper .asset-row"
+            );
+
+            const assetsPayload = [];
+            rows.forEach((row) => {
+                const nameInput = row.querySelector(".asset-name-input");
+                const valueInput = row.querySelector(".asset-value-input");
+
+                const nama = nameInput.value.trim();
+                const nilai = parseToNumber(valueInput.value);
+
+                if (nama !== "") {
+                    assetsPayload.push({
+                        label: nama,
+                        value_idr: nilai,
+                    });
+                }
+            });
 
             try {
                 const res = await fetch("/api/portfolio", {
@@ -126,15 +158,17 @@ function setupEventListeners() {
                         "Content-Type": "application/json",
                         Authorization: "Bearer " + token,
                     },
-                    body: JSON.stringify(bodyPayload),
+                    body: JSON.stringify({ assets: assetsPayload }),
                 });
 
                 const data = await res.json();
 
                 if (res.ok) {
                     setSaveStatus("Tersimpan ✅");
-                    portfolioData = data.portfolio;
+
+                    portfolioData = data.portfolio || [];
                     renderAll(data);
+                    renderEditorRows();
                 } else {
                     setSaveStatus(
                         "Gagal simpan ❌ " + (data.message || "")
@@ -144,6 +178,17 @@ function setupEventListeners() {
                 console.error(err);
                 setSaveStatus("Error koneksi");
             }
+        });
+
+    // tombol tambah aset baru
+    document
+        .getElementById("addAssetBtn")
+        .addEventListener("click", () => {
+            portfolioData.push({
+                label: "",
+                value_idr: 0,
+            });
+            renderEditorRows();
         });
 }
 
@@ -170,13 +215,13 @@ async function loadPortfolio() {
 
         portfolioData = data.portfolio || [];
         renderAll(data);
-        prefillAdminForm();
+        renderEditorRows();
     } catch (err) {
         console.error("Gagal load data /api/portfolio", err);
     }
 }
 
-// ================= RENDER =================
+// ================= RENDER PUBLIC VIEW =================
 function renderAll(rawData) {
     const total = portfolioData.reduce(
         (sum, a) => sum + Number(a.value_idr || 0),
@@ -195,7 +240,7 @@ function renderAll(rawData) {
         document.getElementById("lastUpdate").textContent = t;
     }
 
-    // Tabel
+    // Tabel detail aset
     const tbody = document.getElementById("assetTableBody");
     tbody.innerHTML = "";
 
@@ -218,7 +263,7 @@ function renderAll(rawData) {
         tbody.appendChild(tr);
     });
 
-    // Chart
+    // Chart donat
     renderChart(labels, pcts);
 }
 
@@ -244,12 +289,16 @@ function renderChart(labels, dataArr) {
                         "rgba(0,140,255,0.6)",
                         "rgba(255,255,255,0.25)",
                         "rgba(255,200,0,0.6)",
+                        "rgba(255,0,180,0.5)",
+                        "rgba(160,0,255,0.5)"
                     ],
                     borderColor: [
                         "rgba(0,255,135,1)",
                         "rgba(0,140,255,1)",
                         "rgba(255,255,255,0.5)",
                         "rgba(255,200,0,1)",
+                        "rgba(255,0,180,0.8)",
+                        "rgba(160,0,255,0.8)"
                     ],
                     borderWidth: 2,
                     cutout: "60%",
@@ -273,19 +322,69 @@ function renderChart(labels, dataArr) {
     });
 }
 
-// ================= ADMIN PREFILL =================
-function prefillAdminForm() {
-    if (!token || !portfolioData.length) return;
+// ================= ADMIN EDITOR RENDER =================
+function renderEditorRows() {
+    if (!token) return; // kalau belum login, jangan render editor
 
-    const findVal = (labelName) => {
-        const found = portfolioData.find(
-            (a) => a.label.toLowerCase() === labelName
-        );
-        return found ? found.value_idr : 0;
-    };
+    const wrapper = document.getElementById("assetEditorWrapper");
+    if (!wrapper) return;
 
-    document.getElementById("btcInput").value = findVal("bitcoin");
-    document.getElementById("stockInput").value = findVal("saham");
-    document.getElementById("idrInput").value = findVal("rupiah");
-    document.getElementById("usdInput").value = findVal("dolar");
+    wrapper.innerHTML = "";
+
+    portfolioData.forEach((asset, idx) => {
+        const row = document.createElement("div");
+        row.className = "asset-row";
+
+        row.innerHTML = `
+            <div class="col-label">
+                <div class="row-label-title">Nama Aset</div>
+                <input
+                    type="text"
+                    class="inp-name asset-name-input"
+                    value="${asset.label || ""}"
+                />
+            </div>
+
+            <div class="col-value">
+                <div class="row-label-title">Nilai (Rp)</div>
+                <input
+                    type="text"
+                    class="inp-value asset-value-input"
+                    value="${formatWithDots(asset.value_idr || 0)}"
+                />
+            </div>
+
+            <button
+                type="button"
+                class="remove-btn"
+                data-index="${idx}"
+                title="Hapus aset"
+            >
+                <i class="bx bx-trash"></i>
+            </button>
+        `;
+
+        wrapper.appendChild(row);
+    });
+
+    attachRowEvents();
+}
+
+// tambahkan listener utk hapus row & formatting angka ribuan
+function attachRowEvents() {
+    // tombol hapus
+    document.querySelectorAll(".remove-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const idx = Number(btn.getAttribute("data-index"));
+            portfolioData.splice(idx, 1);
+            renderEditorRows();
+        });
+    });
+
+    // auto-format angka ribuan (1.000.000)
+    document.querySelectorAll(".asset-value-input").forEach((inp) => {
+        inp.addEventListener("input", (e) => {
+            e.target.value = formatWithDots(e.target.value);
+        });
+    });
 }
