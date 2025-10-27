@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portofolio Aset</title>
+
+    <!-- Font & Icon -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet"
+    />
+    <link
+        href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+        rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- TOP BAR -->
+        <header class="topbar">
+            <div class="brand">
+                <i class="bx bxs-pie-chart-alt-2"></i>
+                <span>Portofolio Aset</span>
+            </div>
+
+            <div class="top-actions">
+                <span class="lastUpdate" id="lastUpdate">…</span>
+
+                <button id="loginBtn" class="btn-outline">
+                    <i class="bx bx-lock-alt"></i> Login
+                </button>
+
+                <button id="logoutBtn" class="btn-outline hidden">
+                    <i class="bx bx-log-out"></i> Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="content">
+            <!-- GRID: TOTAL + CHART -->
+            <section class="cards-grid">
+                <!-- TOTAL CARD -->
+                <div class="card total-card">
+                    <div class="card-head">
+                        <h2>Total Aset</h2>
+                        <span class="tag tag-green-soft" id="loginStatusTag">Guest</span>
+                    </div>
+
+                    <div class="total-value" id="totalAset">Rp0</div>
+                    <div class="total-desc">Nilai gabungan (IDR)</div>
+                </div>
+
+                <!-- CHART CARD -->
+                <div class="card chart-card">
+                    <div class="card-head">
+                        <h2>Komposisi Aset</h2>
+                        <span class="mini-hint">Persentase vs Total</span>
+                    </div>
+
+                    <canvas id="portfolioChart" class="chart-canvas"></canvas>
+                </div>
+            </section>
+
+            <!-- TABEL DETAIL -->
+            <section class="card table-card">
+                <div class="card-head">
+                    <h2>Detail Aset</h2>
+                    <span class="mini-hint">Semua angka dalam Rupiah</span>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Aset</th>
+                                <th>Nilai (Rp)</th>
+                                <th>% dari Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetTableBody">
+                            <!-- diisi JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ADMIN PANEL (HANYA MUNCUL SETELAH LOGIN) -->
+            <section class="card admin-card hidden" id="adminPanel">
+                <div class="card-head">
+                    <h2>Admin • Update Portofolio</h2>
+                    <span class="mini-hint">
+                        Ubah nilai aset lalu Simpan
+                    </span>
+                </div>
+
+                <form id="updateForm" class="form-grid">
+                    <div class="form-row">
+                        <label for="btcInput">Bitcoin (Rp)</label>
+                        <input
+                            type="number"
+                            id="btcInput"
+                            inputmode="numeric"
+                            class="inp"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-row">
+                        <label for="stockInput">Saham (Rp)</label>
+                        <input
+                            type="number"
+                            id="stockInput"
+                            inputmode="numeric"
+                            class="inp"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-row">
+                        <label for="idrInput">Rupiah Cash (Rp)</label>
+                        <input
+                            type="number"
+                            id="idrInput"
+                            inputmode="numeric"
+                            class="inp"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-row">
+                        <label for="usdInput">Dolar Cash (Rp)</label>
+                        <input
+                            type="number"
+                            id="usdInput"
+                            inputmode="numeric"
+                            class="inp"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <i class="bx bx-save"></i> Simpan Perubahan
+                    </button>
+
+                    <div class="status-msg" id="saveStatus"></div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal hidden" id="loginModal">
+        <div class="modal-backdrop" id="closeLogin"></div>
+
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3><i class="bx bx-lock-alt"></i> Login Admin</h3>
+                <p class="mini-hint">
+                    Masukkan username & password admin
+                </p>
+            </div>
+
+            <form id="loginForm" class="modal-form">
+                <div class="form-row">
+                    <label for="username">Username</label>
+                    <input
+                        id="username"
+                        type="text"
+                        class="inp"
+                        required
+                        autocomplete="username"
+                    />
+                </div>
+
+                <div class="form-row">
+                    <label for="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        class="inp"
+                        required
+                        autocomplete="current-password"
+                    />
+                </div>
+
+                <button type="submit" class="btn-primary w-full">
+                    <i class="bx bx-log-in"></i> Masuk
+                </button>
+
+                <div class="status-msg" id="loginStatus"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
