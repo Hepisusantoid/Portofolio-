@@ -72,16 +72,19 @@ module.exports = async (req, res) => {
         }
 
         try {
-            const { bitcoin, saham, rupiah, dolar } = req.body || {};
+            const { assets } = req.body || {};
+
+            // normalisasi array aset dari client
+            const cleanAssets = Array.isArray(assets)
+                ? assets.map((a) => ({
+                      label: String(a.label || "").trim(),
+                      value_idr: Number(a.value_idr || 0),
+                  }))
+                : [];
 
             // format data yang mau disimpan ke JSONBin
             const newRecord = {
-                portfolio: [
-                    { label: "Bitcoin", value_idr: Number(bitcoin || 0) },
-                    { label: "Saham", value_idr: Number(saham || 0) },
-                    { label: "Rupiah", value_idr: Number(rupiah || 0) },
-                    { label: "Dolar", value_idr: Number(dolar || 0) },
-                ],
+                portfolio: cleanAssets,
                 lastUpdate: new Date().toISOString(),
             };
 
